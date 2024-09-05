@@ -133,11 +133,12 @@ const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number,
-) {
+): Promise<InvoicesTable[]> {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable>`
+    const prisma = new PrismaClient()
+    const promise: PrismaPromise<InvoicesTable[]> = prisma.$queryRaw`
         SELECT invoices.id,
                invoices.amount,
                invoices.date,
@@ -146,7 +147,7 @@ export async function fetchFilteredInvoices(
                customers.email,
                customers.image_url
         FROM invoices
-                 JOIN customers ON invoices.customer_id = customers.id
+        JOIN customers ON invoices.customer_id = customers.id
         WHERE customers.name ILIKE ${`%${query}%`}
            OR customers.email ILIKE ${`%${query}%`}
            OR invoices.amount::text ILIKE ${`%${query}%`}
@@ -156,26 +157,46 @@ export async function fetchFilteredInvoices(
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
-    return invoices.rows;
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
+
+    return await promise;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
   }
 }
 
-export async function fetchInvoicesPages(query: string) {
+export async function fetchInvoicesPages(query: string): Promise<number> {
   try {
-    const count = await sql`SELECT COUNT(*)
-                            FROM invoices
-                                     JOIN customers ON invoices.customer_id = customers.id
-                            WHERE customers.name ILIKE ${`%${query}%`}
-                               OR customers.email ILIKE ${`%${query}%`}
-                               OR invoices.amount::text ILIKE ${`%${query}%`}
-                               OR invoices.date::text ILIKE ${`%${query}%`}
-                               OR invoices.status ILIKE ${`%${query}%`}
+    const prisma = new PrismaClient()
+    const promise =  prisma.$queryRaw`
+        SELECT COUNT(*)
+        FROM invoices
+        JOIN customers ON invoices.customer_id = customers.id
+        WHERE customers.name ILIKE ${`%${query}%`}
+           OR customers.email ILIKE ${`%${query}%`}
+           OR invoices.amount::text ILIKE ${`%${query}%`}
+           OR invoices.date::text ILIKE ${`%${query}%`}
+           OR invoices.status ILIKE ${`%${query}%`}
     `;
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
 
-    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    const count = await promise
+    const totalPages = Math.ceil(Number(count[0].count) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
     console.error('Database Error:', error);
