@@ -18,7 +18,7 @@ export async function fetchRevenue() {
     console.log('Fetching revenue data...');
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient();
     const promise: PrismaPromise<Revenue[]> = prisma.$queryRaw`SELECT * FROM revenue`;
 
     promise
@@ -45,7 +45,7 @@ export async function fetchLatestInvoices() {
     console.log('Fetching latest invoices data...');
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient();
     const promise = prisma.$queryRaw`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
       FROM invoices
@@ -137,7 +137,7 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient();
     const promise: PrismaPromise<InvoicesTable[]> = prisma.$queryRaw`
         SELECT invoices.id,
                invoices.amount,
@@ -175,7 +175,7 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string): Promise<number> {
   try {
-    const prisma = new PrismaClient()
+    const prisma = new PrismaClient();
     const promise =  prisma.$queryRaw`
         SELECT COUNT(*)
         FROM invoices
@@ -204,9 +204,10 @@ export async function fetchInvoicesPages(query: string): Promise<number> {
   }
 }
 
-export async function fetchInvoiceById(id: string) {
+export async function fetchInvoiceById(id: string): Promise<InvoiceForm> {
   try {
-    const data = await sql<InvoiceForm>`
+    const prisma = new PrismaClient();
+    const promise: PrismaPromise<InvoiceForm[]> = prisma.$queryRaw`
         SELECT invoices.id,
                invoices.customer_id,
                invoices.amount,
@@ -215,7 +216,17 @@ export async function fetchInvoiceById(id: string) {
         WHERE invoices.id = ${id};
     `;
 
-    const invoice = data.rows.map((invoice) => ({
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
+
+    const data = await promise;
+    const invoice = data.map((invoice) => ({
       ...invoice,
       // Convert amount from cents to dollars
       amount: invoice.amount / 100,
@@ -228,16 +239,26 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
-export async function fetchCustomers() {
+export async function fetchCustomers(): Promise<CustomerField[]> {
   try {
-    const data = await sql<CustomerField>`
+    const prisma = new PrismaClient();
+    const promise: PrismaPromise<CustomerField[]> = prisma.$queryRaw`
         SELECT id,
                name
         FROM customers
         ORDER BY name ASC
     `;
 
-    const customers = data.rows;
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
+
+    const customers = await promise;
     return customers;
   } catch (err) {
     console.error('Database Error:', err);
