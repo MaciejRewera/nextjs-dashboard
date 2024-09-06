@@ -8,15 +8,15 @@ generator client {
 }
 
 model customers {
-  id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id        String @id @default(dbgenerated("uuid_generate_v4()"))
   name      String @db.VarChar(255)
   email     String @db.VarChar(255)
   image_url String @db.VarChar(255)
 }
 
 model invoices {
-  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  customer_id String   @db.Uuid
+  id          String   @id @default(dbgenerated("uuid_generate_v4()"))
+  customer_id String
   amount      Int
   status      String   @db.VarChar(255)
   date        DateTime @db.Date
@@ -28,7 +28,7 @@ model revenue {
 }
 
 model users {
-  id       String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id       String @id @default(dbgenerated("uuid_generate_v4()"))
   name     String @db.VarChar(255)
   email    String @unique
   password String
