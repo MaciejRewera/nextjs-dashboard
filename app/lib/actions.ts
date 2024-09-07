@@ -82,3 +82,21 @@ export async function updateInvoice(id: string, formData: FormData) {
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
+
+export async function deleteInvoice(id: string, formData: FormData) {
+  const prisma = new PrismaClient();
+  const promise = prisma.$queryRaw`DELETE FROM invoices WHERE id = ${id}`;
+
+  promise
+    .then(async () => {
+      await prisma.$disconnect()
+    })
+    .catch(async (e) => {
+      console.error(e)
+      await prisma.$disconnect()
+    });
+
+  await promise;
+
+  revalidatePath('/dashboard/invoices');
+}
