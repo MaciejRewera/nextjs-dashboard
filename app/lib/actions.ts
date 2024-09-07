@@ -95,7 +95,7 @@ export async function updateInvoice(id: string, formData: FormData) {
   redirect('/dashboard/invoices');
 }
 
-export async function deleteInvoice(id: string, formData: FormData) {
+export async function deleteInvoice(id: string) {
   try {
     const prisma = new PrismaClient();
     const promise = prisma.$queryRaw`DELETE

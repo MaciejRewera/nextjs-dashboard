@@ -3,7 +3,7 @@ import { Revenue } from './definitions';
 export const formatCurrency = (amount: number) => {
   return formatCurrencyBigInt(BigInt(amount))
 };
-export const formatCurrencyBigInt = (amount: BigInt) => {
+export const formatCurrencyBigInt = (amount: bigint) => {
   return (amount / 100n).toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
