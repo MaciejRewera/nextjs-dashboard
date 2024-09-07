@@ -33,19 +33,24 @@ export async function createInvoice(formData: FormData) {
     date: date
   };
 
-  const prisma = new PrismaClient();
-  const promise = prisma.invoices.create({data: newInvoice});
+  try {
+    const prisma = new PrismaClient();
+    const promise = prisma.invoices.create({data: newInvoice});
 
-  promise
-    .then(async () => {
-      await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-      console.error(e)
-      await prisma.$disconnect()
-    });
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
 
-  await promise;
+    await promise;
+  } catch (error) {
+    console.error('Database Error: Failed to create invoice.');
+    return {message: 'Database Error: Failed to create invoice.'};
+  }
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
@@ -61,42 +66,56 @@ export async function updateInvoice(id: string, formData: FormData) {
 
   const amountInCents = amount * 100;
 
-  const prisma = new PrismaClient();
-  const promise = prisma.$queryRaw`
-    UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-    WHERE id = ${id}
-  `;
+  try {
+    const prisma = new PrismaClient();
+    const promise = prisma.$queryRaw`
+        UPDATE invoices
+        SET customer_id = ${customerId},
+            amount      = ${amountInCents},
+            status      = ${status}
+        WHERE id = ${id}
+    `;
 
-  promise
-    .then(async () => {
-      await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-      console.error(e)
-      await prisma.$disconnect()
-    });
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
 
-  await promise;
+    await promise;
+  } catch (error) {
+    console.error('Database Error: Failed to update invoice.');
+    return {message: 'Database Error: Failed to update invoice.'};
+  }
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
 export async function deleteInvoice(id: string, formData: FormData) {
-  const prisma = new PrismaClient();
-  const promise = prisma.$queryRaw`DELETE FROM invoices WHERE id = ${id}`;
+  try {
+    const prisma = new PrismaClient();
+    const promise = prisma.$queryRaw`DELETE
+                                     FROM invoices
+                                     WHERE id = ${id}`;
 
-  promise
-    .then(async () => {
-      await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-      console.error(e)
-      await prisma.$disconnect()
-    });
+    promise
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+      });
 
-  await promise;
+    await promise;
+  } catch (error) {
+    console.error('Database Error: Failed to delete invoice.');
+    return {message: 'Database Error: Failed to delete invoice.'};
+  }
 
   revalidatePath('/dashboard/invoices');
 }
